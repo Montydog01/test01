@@ -1,8 +1,10 @@
-# Overview
+Overview
+===
 
 A Webpack-based project to serve OpenAPI specifications based on ISO 20022 standards in Swagger UI
 
-# Requirements
+Requirements
+===
 
 To run this you'll need:
 
@@ -10,7 +12,8 @@ To run this you'll need:
 * NPM
 * A connection to public NPM registry
 
-# Running It
+Running It
+===
 
 To execute the server:
 
