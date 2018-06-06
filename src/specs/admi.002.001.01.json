@@ -1,0 +1,92 @@
+{
+  "components": {
+    "schemas": {
+      "Document": {
+        "additionalProperties": false,
+        "properties": {
+          "admi.002.001.01": {
+            "$ref": "#/components/schemas/admi.002.001.01"
+          }
+        },
+        "required": [
+          "admi.002.001.01"
+        ],
+        "type": "object",
+        "xml": {
+          "name": "Document"
+        }
+      },
+      "ISODateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "Max20000Text": {
+        "maxLength": 20000,
+        "minLength": 1,
+        "type": "string"
+      },
+      "Max350Text": {
+        "maxLength": 350,
+        "minLength": 1,
+        "type": "string"
+      },
+      "Max35Text": {
+        "maxLength": 35,
+        "minLength": 1,
+        "type": "string"
+      },
+      "MessageReference": {
+        "additionalProperties": false,
+        "properties": {
+          "Ref": {
+            "$ref": "#/components/schemas/Max35Text"
+          }
+        },
+        "required": [
+          "Ref"
+        ],
+        "type": "object"
+      },
+      "RejectionReason2": {
+        "additionalProperties": false,
+        "properties": {
+          "AddtlData": {
+            "$ref": "#/components/schemas/Max20000Text"
+          },
+          "ErrLctn": {
+            "$ref": "#/components/schemas/Max350Text"
+          },
+          "RjctgPtyRsn": {
+            "$ref": "#/components/schemas/Max35Text"
+          },
+          "RjctnDtTm": {
+            "$ref": "#/components/schemas/ISODateTime"
+          },
+          "RsnDesc": {
+            "$ref": "#/components/schemas/Max350Text"
+          }
+        },
+        "required": [
+          "RjctgPtyRsn"
+        ],
+        "type": "object"
+      },
+      "admi.002.001.01": {
+        "additionalProperties": false,
+        "properties": {
+          "RltdRef": {
+            "$ref": "#/components/schemas/MessageReference"
+          },
+          "Rsn": {
+            "$ref": "#/components/schemas/RejectionReason2"
+          }
+        },
+        "required": [
+          "RltdRef",
+          "Rsn"
+        ],
+        "type": "object"
+      }
+    }
+  }
+}

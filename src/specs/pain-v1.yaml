@@ -1,36 +1,63 @@
 openapi: 3.0.0
 info:
   title: ISO 20022 PAIN API
-  description: |
-  
+  description: >
+
     # Brief
-    
-    This is a proof-of-concept for a ISO 20022 Payment Initiation (PAIN) REST API based on the ISO 20022 organization's whitepaper
-    
+
+
+    This is a proof-of-concept for a ISO 20022 Payment Initiation (PAIN) REST
+    API based on the ISO 20022 organization's whitepaper
+
+
     # Messages
-    
+
+
     The following messages have been mapped into this specification:
-    
+
+
     * Credit Initiation (PAIN.001.001.08)
+
     * Direct Debit Initiation (PAIN.008.001.07)
+
     * Reversal (PAIN.007.001.08)
+
     * Status (PAIN.002.001.09)
-    
-    Note that these are mapped using a generator as a first pass and further refinement is possible
-    
+
+
+    Note that these are mapped using a generator as a first pass and further
+    refinement is possible
+
+
     # Responses
-    
-    All endpoints are specified to return a Payment Status message (PAIN.002.001.09). However, consumers can also receive HTTP response codes based on well-known scenarios. HTTP response codes communicate the success or failure of the request and **no business scenarios are implied by these response codes unless they accompanied by a Payment Status message**
-    
+
+
+    All endpoints are specified to return a Payment Status message
+    (PAIN.002.001.09). However, consumers can also receive HTTP response codes
+    based on well-known scenarios. HTTP response codes communicate the success
+    or failure of the request and **no business scenarios are implied by these
+    response codes unless they accompanied by a Payment Status message**
+
+
     # Callbacks
-    
-    All request bodies encapsulate a callback URL, allowing out-of-band Payments Status messages to be sent to consumers:
-    
-    * Each PAIN message is wrapped in a property/element that specifies the callback URL
-    * The specification uses a `Callback` object from OpenAPI 3.0 to pluck this from the request body
-    
-    At present this is set to `required: true` and specified per request as a means of demonstrating how flexible the functionality is i.e. it would be possible to provide dedicated endpoints using the message context to drive this. However, there are options to use a single webhook or only part of the message context e.g. a unique identifier concatenated to the callback URL
-    
+
+
+    All request bodies encapsulate a callback URL, allowing out-of-band Payments
+    Status messages to be sent to consumers:
+
+
+    * Each PAIN message is wrapped in a property/element that specifies the
+    callback URL
+
+    * The specification uses a `Callback` object from OpenAPI 3.0 to pluck this
+    from the request body
+
+
+    At present this is set to `required: true` and specified per request as a
+    means of demonstrating how flexible the functionality is i.e. it would be
+    possible to provide dedicated endpoints using the message context to drive
+    this. However, there are options to use a single webhook or only part of the
+    message context e.g. a unique identifier concatenated to the callback URL
   version: 0.0.1
 paths:
   /payments/credits:
@@ -52,13 +79,15 @@ paths:
             schema:
               $ref: '#/components/schemas/PAIN00100108'
       responses:
-        201:
+        '201':
           $ref: '#/components/responses/PaymentStatus'
-        401:
+        '400':
+          $ref: '#/components/responses/MessageReject'
+        '401':
           description: Not authorised
-        403:
+        '403':
           description: Not authorised for this resource
-        429:
+        '429':
           description: Exceed rate limits for resource
       callbacks:
         PaymentStatus:
@@ -67,7 +96,7 @@ paths:
               requestBody:
                 $ref: '#/components/requestBodies/PaymentStatusCallback'
               responses:
-                200:
+                '200':
                   description: OK
   /payments/debits:
     post:
@@ -88,13 +117,15 @@ paths:
             schema:
               $ref: '#/components/schemas/PAIN00800107'
       responses:
-        201:
+        '201':
           $ref: '#/components/responses/PaymentStatus'
-        401:
+        '400':
+          $ref: '#/components/responses/MessageReject'
+        '401':
           description: Not authorised
-        403:
+        '403':
           description: Not authorised for this resource
-        429:
+        '429':
           description: Exceed rate limits for resource
       callbacks:
         PaymentStatus:
@@ -103,7 +134,7 @@ paths:
               requestBody:
                 $ref: '#/components/requestBodies/PaymentStatusCallback'
               responses:
-                200:
+                '200':
                   description: OK
   /payments/reversals:
     post:
@@ -124,13 +155,15 @@ paths:
             schema:
               $ref: '#/components/schemas/PAIN00700108'
       responses:
-        201:
+        '201':
           $ref: '#/components/responses/PaymentStatus'
-        401:
+        '400':
+          $ref: '#/components/responses/MessageReject'
+        '401':
           description: Not authorised
-        403:
+        '403':
           description: Not authorised for this resource
-        429:
+        '429':
           description: Exceed rate limits for resource
       callbacks:
         PaymentStatus:
@@ -139,7 +172,7 @@ paths:
               requestBody:
                 $ref: '#/components/requestBodies/PaymentStatusCallback'
               responses:
-                200:
+                '200':
                   description: OK
 components:
   callbacks:
@@ -149,7 +182,7 @@ components:
           requestBody:
             $ref: '#/components/requestBodies/PaymentStatusCallback'
           responses:
-            200:
+            '200':
               description: OK
   requestBodies:
     PaymentStatusCallback:
@@ -163,6 +196,15 @@ components:
           schema:
             $ref: 'pain.002.001.09.json#/components/schemas/Document'
   responses:
+    MessageReject:
+      description: Message rejected - could not be understood or verified
+      content:
+        application/xml:
+          schema:
+            $ref: 'admi.002.001.01.json#/components/schemas/Document'
+        application/json:
+          schema:
+            $ref: 'admi.002.001.01.json#/components/schemas/Document'
     PaymentStatus:
       description: Payment Status response body
       content:
@@ -182,7 +224,7 @@ components:
       type: oauth2
       flows:
         clientCredentials:
-          tokenUrl: https://api.example.nowhere/token
+          tokenUrl: 'https://api.example.nowhere/token'
           scopes:
             credit: Make credit transfers
             return: Return payments
@@ -191,8 +233,8 @@ components:
     PAIN00100108:
       type: object
       required:
-      - callbackUrl
-      - document
+        - callbackUrl
+        - document
       properties:
         callbackUrl:
           type: string
@@ -201,8 +243,8 @@ components:
     PAIN00800107:
       type: object
       required:
-      - callbackUrl
-      - document
+        - callbackUrl
+        - document
       properties:
         callbackUrl:
           type: string
@@ -211,8 +253,8 @@ components:
     PAIN00700108:
       type: object
       required:
-      - callbackUrl
-      - document
+        - callbackUrl
+        - document
       properties:
         callbackUrl:
           type: string
