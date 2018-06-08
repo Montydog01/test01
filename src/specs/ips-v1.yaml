@@ -46,7 +46,7 @@ info:
     
     * The payload will then be detached as described [here](https://tools.ietf.org/html/rfc7515#appendix-F).
     
-    * The remaining parts of the signature will be conveyed using a custom HTTP header, nominally `x-jws-signature`.
+    * The remaining parts of the JWT will be conveyed using a custom HTTP header, nominally `x-jws-signature`.
 
     # Responses
 
@@ -84,11 +84,11 @@ info:
     ```
     
     
-    **This should be sufficient - and to be frank, why make life more complicated?**
+    **This should be sufficient - and to be frank, why make life more complicated?**. The payload versions will follow the API specification versions i.e. v0.0.1 
     
   version: 0.0.1
 paths:
-  /credits:
+  /payments/credits:
     post:
       tags:
         - Credits
@@ -128,9 +128,10 @@ paths:
               responses:
                 '200':
                   description: OK
-  /credits/{creditId}:
+  /payments/credits/{creditId}:
     get:
       tags:
+        - Payments
         - Credits
       summary: pacs.002.001.09 - Get the status of an existing credit transfer on-demand
       description: |
@@ -155,6 +156,48 @@ paths:
           description: Not authorised for this resource
         '429':
           description: Exceed rate limits for resource
+  /payments/requests:
+    post:
+      tags:
+        - Payments
+        - Requests
+      summary: pain.013.001.05 - Request for Payment
+      description: |
+        A request for payment initiated by the creditor (the organisation owed money)
+      security:
+        - apiKey: []
+        - OAuth: []
+      requestBody:
+        description: Request for Payment
+        content:
+          application/xml:
+            schema:
+              $ref: '#/components/requestBodies/RequestForPayment'
+          application/json:
+            schema:
+              $ref: '#/components/requestBodies/RequestForPayment'
+      responses:
+        '201':
+          $ref: '#/components/schemas/PAIN01400105'
+        '202':
+          description: Request was successfully delivered but no response was received from debtor before responding. Expect response from callback
+        '400':
+          $ref: '#/components/responses/MessageReject'
+        '401':
+          description: Not authorised
+        '403':
+          description: Not authorised for this resource
+        '429':
+          description: Exceed rate limits for resource
+      callbacks:
+        PaymentStatus:
+          '{$request.body#/callbackUrl}':
+            post:
+              requestBody:
+                $ref: '#/components/requestBodies/ResponseCallback'
+              responses:
+                '200':
+                  description: OK
 components:
   callbacks:
     PaymentStatus:
@@ -184,19 +227,24 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/CreditTransfer'
+    RequestForPayment:
+      description: A request for payment request with the BAH
+      content:
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/RequestForPayment'
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RequestForPayment'
     ResponseCallback:
       description: Further payment status information following initial response
       content:
         application/xml:
           schema:
-            oneOf:
-              - $ref: '#/components/schemas/PACS00200109'
-              - $ref: '#/components/schemas/REMT00100102'
+            $ref: '#/components/schemas/CallBack'
         application/json:
           schema:
-            oneOf:
-              - $ref: '#/components/schemas/PACS00200109'
-              - $ref: '#/components/schemas/REMT00100102'
+            $ref: '#/components/schemas/CallBack'
   responses:
     MessageReject:
       description: Message rejected - could not be understood or verified
@@ -229,6 +277,7 @@ components:
           tokenUrl: 'https://api.example.nowhere/token'
           scopes:
             credit: Make credit transfers
+            request: Submit request to pay instructions
             return: Return payments
             status: Collect status reports
   schemas:
@@ -245,6 +294,10 @@ components:
       $ref: 'pacs.002.001.09.json#/components/schemas/Document'
     PACS00800107:
       $ref: 'pacs.008.001.07.json#/components/schemas/Document'
+    PAIN01300105:
+      $ref: 'pain.013.001.05.json#/components/schemas/Document'
+    PAIN01400105:
+      $ref: 'pain.014.001.05.json#/components/schemas/Document'
     REMT00100102:
       $ref: 'remt.001.001.02.json#/components/schemas/Document'
     CallbackUrl:
@@ -254,6 +307,11 @@ components:
       properties:
         callbackUrl:
           type: string
+    CallBack:
+      oneOf:
+        - $ref: '#/components/schemas/PACS00200109'
+        - $ref: '#/components/schemas/PAIN01400105'
+        - $ref: '#/components/schemas/REMT00100102'
     CreditTransfer:
       type: object
       required:
@@ -264,4 +322,14 @@ components:
             - $ref: '#/components/schemas/CallbackUrl'
             - $ref: '#/components/schemas/HEAD00100101'
             - $ref: '#/components/schemas/PACS00800107'
+    RequestForPayment:
+      type: object
+      required:
+        - Message
+      properties:
+        Message:
+          allOf:
+            - $ref: '#/components/schemas/CallbackUrl'
+            - $ref: '#/components/schemas/HEAD00100101'
+            - $ref: '#/components/schemas/PAIN01300105'
   
