@@ -1,0 +1,488 @@
+openapi: 3.0.0
+info:
+  title: Immediate Payments Solution (IPS) Platform API
+  description: >
+
+    # Brief
+
+
+    This is a first draft of an API specification for the IPS Platform using the most recent message ISO 20022 message specifications as a baseline. Note that: 
+    
+    * This implements the full-fat ISO 20022 schemas NOT the internal versions.
+    
+    * A separate specfication is required for participants as they'll support.
+    
+    * **This is not a REST API!!!** At least in the sense it's not modelled around entities - ISO 20022 doesn't lend itself to that approach in it's current guise. This is more an attempt at providing **native ISO 20022, convenient URLs, a decent JSON alternative to XML and a security model based on JavaScript Object Signing and Encryption ([JOSE](http://jose.readthedocs.io/en/latest/))**
+    
+    * There is argument to wrap this in an RPC specification to at least align it to a protocol - but most roads on that subject lead to [gRPC](https://grpc.io/) and that involves protocol buffers rather than a JSON or XML encoding and a specific implementation for the providers...
+    
+    * The design weighs **heavily on the use of callbacks** i.e. the expectation is that a request will get an immediate response and another future response **related to the original message**. The future response should be directed to the designated Callback URL.
+
+
+    # Design
+
+    A few notes on the design approach:
+
+    * The schemas reference are created using a generator as a first pass and further refinement is possible and expected.
+    
+    * A REST paradigm differs greatly from messaging and some elements of the message construct are not warranted. They are retained as this is a first-pass but could be removed as the specification is refined.
+    
+    * The responses are designed that "if" a valid **business** response to a request is received it will be relayed to the consumer. If it is not, the **technical validation** response will be sent (pacs.002).
+    
+    * Consumers can also receive HTTP response codes based on well-known scenarios (401, 403, 429, etc). HTTP response codes communicate the success or failure of the request and **no business scenarios are implied by these response codes unless they accompanied by an appropriate response body**.
+    
+    * The Business Application Header (BAH) is removed as this can be represented using other means, specifically using a JSON Web Signature (JWS). The BAH can be injected at the API gateway to avoid impact on IPS.
+    
+    # Security
+
+    Consumers connecting via an API gateway will supply a JWS instead of XML Signature in the BAH. The approach is as follows:
+    
+    * A JSON Web Token (JWT) will be created that carries the same business identifiers as the BAH, either using out-of-the-box or custom claims (custom claims will be indicated using the `crit` attribute).
+    
+    * The JWT will be signed to create the JWS.
+    
+    * The payload will then be detached as described [here](https://tools.ietf.org/html/rfc7515#appendix-F).
+    
+    * The remaining parts of the JWT will be conveyed using a custom HTTP header, nominally `jws-signature`.
+    
+    * The API gateway will validate the JWS, convert the payload to XML (if required) and then inject a BAH with an XML Singature that identifies it as a valid IPS participant.
+    
+    * IPS will then validate the XML Signature, providing assurance that the message has come from the API gateway.
+    
+    The specification also contains an OAuth Client Credentials grant, but his is really intended as an example.
+
+    # Callbacks
+
+    All request bodies encapsulate a callback URL, allowing out-of-band responses to be sent to consumers:
+
+    * Each message is wrapped in a property/element that specifies the callback URL.
+
+    * The specification uses a `Callback` object from OpenAPI 3.0 to pluck this from the request body. The value is set using the `callbackUrl` property.
+    
+    * If the `callbackUrl` property is left blank then any Callbacks will be sent using a default URL. Setting the default URL is currently outside the scope of this specification.
+    
+    * Note that Callback HTTP response codes are **intended as a replacement to pacs.002 messages wherever practical**. However, they may be used where they represent more than a confirmation i.e. there is a business response to convey
+    
+    # Versioning
+    
+    **There will be no versioning in the path in this API - and DEFINITELY no nested resources and versioning**. This specification will be following Z's laws on versioning as defined [here](https://blog.goodapi.co/api-change-management-2fe5bba32e9b).
+    
+    
+    For the sake of sanity versioning of the payloads is not included in this specification - but it's expected to be like so:
+  
+  
+    ```
+    Accept: application/com.vocalink.ips.v0.0.1+xml
+    ```
+    
+    
+    ```
+    Content-Type: application/com.vocalink.ips.v0.0.1+json
+    ```
+    
+    
+    **This should be sufficient - and to be frank, why make life more complicated?**. The payload versions will follow the API specification versions i.e. v0.0.1 
+    
+  version: 0.0.1
+paths:
+  /credits:
+    post:
+      tags:
+        - Credits
+        - POST
+      summary: pacs.008.001.07 - Initiate a credit transfer
+      description: Initiate a credit transfer
+      security:
+        - OAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CallbackUrl'
+        - $ref: '#/components/parameters/JWS'
+      requestBody:
+        $ref: '#/components/requestBodies/CreditTransfer'
+      responses:
+        '201':
+          $ref: '#/components/responses/CreditTransfer'
+        '202':
+          $ref: '#/components/responses/Status'
+        '400':
+          $ref: '#/components/responses/MessageReject'
+        '401':
+          description: Not authorised
+        '403':
+          description: Not authorised for this resource
+        '429':
+          description: Exceed rate limits for resource
+      callbacks:
+        Response:
+          $ref: '#/components/callbacks/CreditTransfer'
+  /information:
+    post:
+      tags:
+        - Information
+        - POST
+      summary: camt.026.001.06 - Request for information by creditor
+      description: |
+        A request sent from creditor to debtor for more information so a payment can be applied. Morally this "could" be a GET on the existing payment entity - but this is hard to achieve given the amount of info encoded in the camt.026 message and thus would require an alternative (non-native ISO 20022) design approach.
+      security:
+        - OAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CallbackUrl'
+        - $ref: '#/components/parameters/JWS'
+      requestBody:
+        $ref: '#/components/requestBodies/RequestForInformation'
+      responses:
+        '201':
+          $ref: '#/components/responses/RequestForInformation'
+        '202':
+          $ref: '#/components/responses/Status'
+        '400':
+          $ref: '#/components/responses/MessageReject'
+        '401':
+          description: Not authorised
+        '403':
+          description: Not authorised for this resource
+        '429':
+          description: Exceed rate limits for resource
+      callbacks:
+        Response:
+          $ref: '#/components/callbacks/RequestForInformation'
+  /remittances:
+    post:
+      tags:
+        - Remittances
+        - POST
+      summary: remt.001.001.02 - Send a stand-alone remittance advice
+      description: |
+        Remittance advices are associated with payment messages (pacs.008 or pain.013) and therefore could be transmitted via the callback URL. However, an endpoint is provide for instances where no callback URL is sent or configured. Note that no callback URL parameter is provided - a pacs.002 will be received which effectively ends the "flow"
+      security:
+        - OAuth: []
+      parameters:
+        - $ref: '#/components/parameters/JWS'
+      requestBody:
+        $ref: '#/components/requestBodies/RemittanceAdvice'
+      responses:
+        '200':
+          $ref: '#/components/responses/Status'
+        '400':
+          $ref: '#/components/responses/MessageReject'
+        '401':
+          description: Not authorised
+        '403':
+          description: Not authorised for this resource
+        '429':
+          description: Exceed rate limits for resource
+  /requests:
+    post:
+      tags:
+        - Request to Pay
+        - POST
+      summary: pain.013.001.05 - Request for Payment
+      description: |
+        A request for payment initiated by the creditor (the organisation owed money). Note that this is not the transfer of funds "message", but a request by the creditor to the debtor to pay up. The debtor responds with an acknowledgement (the pain.014) which is then followed up with a (nominally) a pacs.008 on the designated date. **A pacs.008 is not a valid synchronous response as this is the initialisation of another "flow"** - it could be done, but this will make the API design muddled...
+      security:
+        - OAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CallbackUrl'
+        - $ref: '#/components/parameters/JWS'
+      requestBody:
+        $ref: '#/components/requestBodies/RequestForPayment'
+      responses:
+        '201':
+          $ref: '#/components/responses/RequestForPayment'
+        '202':
+          description: Request was successfully delivered but no response was received from debtor before responding. Expect response from callback
+        '400':
+          $ref: '#/components/responses/MessageReject'
+        '401':
+          description: Not authorised
+        '403':
+          description: Not authorised for this resource
+        '429':
+          description: Exceed rate limits for resource
+      callbacks:
+        Response:
+          $ref: '#/components/callbacks/RequestForPayment'
+  /returns:
+    post:
+      tags:
+        - Returns
+        - POST
+      summary: camt.056.001.05 - Request return of funds
+      description: |
+        In this scenario a Debtor requests return of funds following a previous pacs.008 request. Note that this "could" be a **DELETE** on an existing credit entity - but this is unlikely to provide a consistent interface
+      security:
+        - OAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CallbackUrl'
+        - $ref: '#/components/parameters/JWS'
+      requestBody:
+        $ref: '#/components/requestBodies/ReturnOfFunds'
+      responses:
+        '201':
+          $ref: '#/components/responses/ReturnOfFunds'
+        '202':
+          $ref: '#/components/responses/Status'
+        '400':
+          $ref: '#/components/responses/MessageReject'
+        '401':
+          description: Not authorised
+        '403':
+          description: Not authorised for this resource
+        '429':
+          description: Exceed rate limits for resource
+      callbacks:
+        ReturnOfFunds:
+          $ref: '#/components/callbacks/ReturnOfFunds'
+components:
+  callbacks:
+    CreditTransfer:
+      '{$request.header.callback-url}':
+        post:
+          requestBody:
+            description: |
+              Possible responses to a pacs.008 request - message status, payment confirmation or a remittance advice
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/CreditTransferCallback'
+              application/xml:
+                schema:
+                  $ref: '#/components/schemas/CreditTransferCallback'
+          responses:
+            '200':
+              description: OK
+    RequestForInformation:
+      '{$request.header.callback-url}':
+        post:
+          requestBody:
+            description: |
+              Possible responses to a pacs.013 request - pacs.014 response or message status
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/RequestForInformationCallback'
+              application/xml:
+                schema:
+                  $ref: '#/components/schemas/RequestForInformationCallback'
+          responses:
+            '200':
+              description: OK
+    RequestForPayment:
+      '{$request.header.callback-url}':
+        post:
+          requestBody:
+            description: |
+              Possible responses to a pacs.013 request - pacs.014 response or message status
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/RequestForPaymentCallback'
+              application/xml:
+                schema:
+                  $ref: '#/components/schemas/RequestForPaymentCallback'
+          responses:
+            '200':
+              description: OK
+    ReturnOfFunds:
+      '{$request.header.callback-url}':
+        post:
+          requestBody:
+            description: |
+              Possible responses to a camt.056 request - camt.029 response or message status
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ReturnOfFundsCallback'
+              application/xml:
+                schema:
+                  $ref: '#/components/schemas/ReturnOfFundsCallback'
+          responses:
+            '200':
+              description: OK
+    Status:
+      '{$request.header.callback-url}':
+        post:
+          requestBody:
+            description: |
+              Possible responses to a pacs.008 request - message status or a remittance advice
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/CreditTransferCallback'
+              application/xml:
+                schema:
+                  $ref: '#/components/schemas/CreditTransferCallback'
+          responses:
+            '200':
+              description: OK
+  parameters:
+    CallbackUrl:
+      name: callback-url
+      in: header
+      description: The URL at which and out-of-band responses to a given message should be made
+      required: false
+      schema:
+        type: string
+        format: uri
+    JWS:
+      name: jws-signature
+      in: header
+      description: The JSON Web Signature that replaces the XML Signature for JSON payloads
+      required: false
+      schema:
+        type: string
+        format: json-web-token
+  requestBodies:
+    CreditTransfer:
+      description: pacs.008 - A create transfer request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PACS00800107'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/PACS00800107'
+    RemittanceAdvice:
+      description: remt.001 - Stand-alone remittance advice
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/REMT00100102'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/REMT00100102'
+    RequestForPayment:
+      description: pain.013 - A request for payment
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PAIN01300105'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/PAIN01300105'
+    RequestForInformation:
+      description: camt.026 - A request for information to apply a payment
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CAMT02600106'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/CAMT02600106'
+    ReturnOfFunds:
+      description: camt.56 - A return of funds request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CAMT05600105'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/CAMT05600105'
+  responses:
+    CreditTransfer:
+      description: pacs.002 - Business response to a credit transfer request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PACS00200109'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/PACS00200109'
+    MessageReject:
+      description: admi.002 - Message rejected, could not be understood or verified
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ADMI00200101'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/ADMI00200101'
+    RequestForInformation:
+      description: camt.028 - Request for Information response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CAMT02800106'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/CAMT02800106'
+    RequestForPayment:
+      description: pacs.014 - Request for Payment response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PAIN01400105'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/PAIN01400105'
+    ReturnOfFunds:
+      description: camt.029 - Return of Funds response
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/CAMT02900106'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/CAMT02900106'
+    Status:
+      description: pacs.002 - Technical response to API call - no business response available
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/PACS00200109'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/PACS00200109'
+  securitySchemes:
+    OAuth:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: 'https://api.example.nowhere/token'
+          scopes:
+            credit: Make credit transfers
+            request: Submit request to pay instructions
+            return: Return payments
+            status: Collect status reports
+  schemas:
+    ADMI00200101:
+      $ref: 'admi.002.001.01.json#/components/schemas/Document'
+    CAMT02600106:
+      $ref: 'camt.026.001.06.json#/components/schemas/Document'
+    CAMT02800106:
+      $ref: 'camt.028.001.06.json#/components/schemas/Document'
+    CAMT02900106:
+      $ref: 'camt.029.001.06.json#/components/schemas/Document'
+    CAMT03500104:
+      $ref: 'camt.035.001.04.json#/components/schemas/Document'
+    CAMT05600105:
+      $ref: 'camt.056.001.05.json#/components/schemas/Document'
+    PACS00200109:
+      $ref: 'pacs.002.001.09.json#/components/schemas/Document'
+    PACS00800107:
+      $ref: 'pacs.008.001.07.json#/components/schemas/Document'
+    PAIN01300105:
+      $ref: 'pain.013.001.05.json#/components/schemas/Document'
+    PAIN01400105:
+      $ref: 'pain.014.001.05.json#/components/schemas/Document'
+    REMT00100102:
+      $ref: 'remt.001.001.02.json#/components/schemas/Document'
+    CreditTransferCallback:
+      oneOf:
+        - $ref: '#/components/schemas/PACS00200109'
+        - $ref: '#/components/schemas/CAMT03500104'
+        - $ref: '#/components/schemas/REMT00100102'
+    RequestForInformationCallback:
+      oneOf:
+        - $ref: '#/components/schemas/PACS00200109'
+        - $ref: '#/components/schemas/CAMT02800106'
+    RequestForPaymentCallback:
+      oneOf:
+        - $ref: '#/components/schemas/PACS00200109'
+        - $ref: '#/components/schemas/PAIN01400105'
+    ReturnOfFundsCallback:
+      oneOf:
+        - $ref: '#/components/schemas/PACS00200109'
+        - $ref: '#/components/schemas/CAMT02900106'
+
+    
