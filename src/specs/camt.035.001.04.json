@@ -1,0 +1,646 @@
+{
+  "components": {
+    "schemas": {
+      "AddressType2Code": {
+        "enum": [
+          "ADDR",
+          "PBOX",
+          "HOME",
+          "BIZZ",
+          "MLTO",
+          "DLVY"
+        ],
+        "type": "string"
+      },
+      "AnyBICIdentifier": {
+        "pattern": "[A-Z]{6,6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3,3}){0,1}",
+        "type": "string"
+      },
+      "BICFIIdentifier": {
+        "pattern": "[A-Z]{6,6}[A-Z2-9][A-NP-Z0-9]([A-Z0-9]{3,3}){0,1}",
+        "type": "string"
+      },
+      "BranchAndFinancialInstitutionIdentification5": {
+        "additionalProperties": false,
+        "properties": {
+          "BrnchId": {
+            "$ref": "#/components/schemas/BranchData2"
+          },
+          "FinInstnId": {
+            "$ref": "#/components/schemas/FinancialInstitutionIdentification8"
+          }
+        },
+        "required": [
+          "FinInstnId"
+        ],
+        "type": "object"
+      },
+      "BranchData2": {
+        "additionalProperties": false,
+        "properties": {
+          "Id": {
+            "$ref": "#/components/schemas/Max35Text"
+          },
+          "Nm": {
+            "$ref": "#/components/schemas/Max140Text"
+          },
+          "PstlAdr": {
+            "$ref": "#/components/schemas/PostalAddress6"
+          }
+        },
+        "type": "object"
+      },
+      "Case4": {
+        "additionalProperties": false,
+        "properties": {
+          "Cretr": {
+            "$ref": "#/components/schemas/Party35Choice"
+          },
+          "Id": {
+            "$ref": "#/components/schemas/Max35Text"
+          },
+          "ReopCaseIndctn": {
+            "$ref": "#/components/schemas/YesNoIndicator"
+          }
+        },
+        "required": [
+          "Id",
+          "Cretr"
+        ],
+        "type": "object"
+      },
+      "CaseAssignment4": {
+        "additionalProperties": false,
+        "properties": {
+          "Assgne": {
+            "$ref": "#/components/schemas/Party35Choice"
+          },
+          "Assgnr": {
+            "$ref": "#/components/schemas/Party35Choice"
+          },
+          "CreDtTm": {
+            "$ref": "#/components/schemas/ISODateTime"
+          },
+          "Id": {
+            "$ref": "#/components/schemas/Max35Text"
+          }
+        },
+        "required": [
+          "Id",
+          "Assgnr",
+          "Assgne",
+          "CreDtTm"
+        ],
+        "type": "object"
+      },
+      "ClearingSystemIdentification2Choice": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": [
+              "Cd"
+            ]
+          },
+          {
+            "required": [
+              "Prtry"
+            ]
+          }
+        ],
+        "properties": {
+          "Cd": {
+            "$ref": "#/components/schemas/ExternalClearingSystemIdentification1Code"
+          },
+          "Prtry": {
+            "$ref": "#/components/schemas/Max35Text"
+          }
+        },
+        "type": "object"
+      },
+      "ClearingSystemMemberIdentification2": {
+        "additionalProperties": false,
+        "properties": {
+          "ClrSysId": {
+            "$ref": "#/components/schemas/ClearingSystemIdentification2Choice"
+          },
+          "MmbId": {
+            "$ref": "#/components/schemas/Max35Text"
+          }
+        },
+        "required": [
+          "MmbId"
+        ],
+        "type": "object"
+      },
+      "ContactDetails2": {
+        "additionalProperties": false,
+        "properties": {
+          "EmailAdr": {
+            "$ref": "#/components/schemas/Max2048Text"
+          },
+          "FaxNb": {
+            "$ref": "#/components/schemas/PhoneNumber"
+          },
+          "MobNb": {
+            "$ref": "#/components/schemas/PhoneNumber"
+          },
+          "Nm": {
+            "$ref": "#/components/schemas/Max140Text"
+          },
+          "NmPrfx": {
+            "$ref": "#/components/schemas/NamePrefix1Code"
+          },
+          "Othr": {
+            "$ref": "#/components/schemas/Max35Text"
+          },
+          "PhneNb": {
+            "$ref": "#/components/schemas/PhoneNumber"
+          }
+        },
+        "type": "object"
+      },
+      "CountryCode": {
+        "pattern": "[A-Z]{2,2}",
+        "type": "string"
+      },
+      "DateAndPlaceOfBirth1": {
+        "additionalProperties": false,
+        "properties": {
+          "BirthDt": {
+            "$ref": "#/components/schemas/ISODate"
+          },
+          "CityOfBirth": {
+            "$ref": "#/components/schemas/Max35Text"
+          },
+          "CtryOfBirth": {
+            "$ref": "#/components/schemas/CountryCode"
+          },
+          "PrvcOfBirth": {
+            "$ref": "#/components/schemas/Max35Text"
+          }
+        },
+        "required": [
+          "BirthDt",
+          "CityOfBirth",
+          "CtryOfBirth"
+        ],
+        "type": "object"
+      },
+      "Document": {
+        "additionalProperties": false,
+        "properties": {
+          "PrtryFrmtInvstgtn": {
+            "$ref": "#/components/schemas/ProprietaryFormatInvestigationV04"
+          }
+        },
+        "required": [
+          "PrtryFrmtInvstgtn"
+        ],
+        "type": "object",
+        "xml": {
+          "name": "Document"
+        }
+      },
+      "ExternalClearingSystemIdentification1Code": {
+        "maxLength": 5,
+        "minLength": 1,
+        "type": "string"
+      },
+      "ExternalFinancialInstitutionIdentification1Code": {
+        "maxLength": 4,
+        "minLength": 1,
+        "type": "string"
+      },
+      "ExternalOrganisationIdentification1Code": {
+        "maxLength": 4,
+        "minLength": 1,
+        "type": "string"
+      },
+      "ExternalPersonIdentification1Code": {
+        "maxLength": 4,
+        "minLength": 1,
+        "type": "string"
+      },
+      "FinancialIdentificationSchemeName1Choice": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": [
+              "Cd"
+            ]
+          },
+          {
+            "required": [
+              "Prtry"
+            ]
+          }
+        ],
+        "properties": {
+          "Cd": {
+            "$ref": "#/components/schemas/ExternalFinancialInstitutionIdentification1Code"
+          },
+          "Prtry": {
+            "$ref": "#/components/schemas/Max35Text"
+          }
+        },
+        "type": "object"
+      },
+      "FinancialInstitutionIdentification8": {
+        "additionalProperties": false,
+        "properties": {
+          "BICFI": {
+            "$ref": "#/components/schemas/BICFIIdentifier"
+          },
+          "ClrSysMmbId": {
+            "$ref": "#/components/schemas/ClearingSystemMemberIdentification2"
+          },
+          "Nm": {
+            "$ref": "#/components/schemas/Max140Text"
+          },
+          "Othr": {
+            "$ref": "#/components/schemas/GenericFinancialIdentification1"
+          },
+          "PstlAdr": {
+            "$ref": "#/components/schemas/PostalAddress6"
+          }
+        },
+        "type": "object"
+      },
+      "GenericFinancialIdentification1": {
+        "additionalProperties": false,
+        "properties": {
+          "Id": {
+            "$ref": "#/components/schemas/Max35Text"
+          },
+          "Issr": {
+            "$ref": "#/components/schemas/Max35Text"
+          },
+          "SchmeNm": {
+            "$ref": "#/components/schemas/FinancialIdentificationSchemeName1Choice"
+          }
+        },
+        "required": [
+          "Id"
+        ],
+        "type": "object"
+      },
+      "GenericOrganisationIdentification1": {
+        "additionalProperties": false,
+        "properties": {
+          "Id": {
+            "$ref": "#/components/schemas/Max35Text"
+          },
+          "Issr": {
+            "$ref": "#/components/schemas/Max35Text"
+          },
+          "SchmeNm": {
+            "$ref": "#/components/schemas/OrganisationIdentificationSchemeName1Choice"
+          }
+        },
+        "required": [
+          "Id"
+        ],
+        "type": "object"
+      },
+      "GenericPersonIdentification1": {
+        "additionalProperties": false,
+        "properties": {
+          "Id": {
+            "$ref": "#/components/schemas/Max35Text"
+          },
+          "Issr": {
+            "$ref": "#/components/schemas/Max35Text"
+          },
+          "SchmeNm": {
+            "$ref": "#/components/schemas/PersonIdentificationSchemeName1Choice"
+          }
+        },
+        "required": [
+          "Id"
+        ],
+        "type": "object"
+      },
+      "ISODate": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "ISODateTime": {
+        "format": "date-time",
+        "type": "string"
+      },
+      "Max140Text": {
+        "maxLength": 140,
+        "minLength": 1,
+        "type": "string"
+      },
+      "Max16Text": {
+        "maxLength": 16,
+        "minLength": 1,
+        "type": "string"
+      },
+      "Max2048Text": {
+        "maxLength": 2048,
+        "minLength": 1,
+        "type": "string"
+      },
+      "Max350Text": {
+        "maxLength": 350,
+        "minLength": 1,
+        "type": "string"
+      },
+      "Max35Text": {
+        "maxLength": 35,
+        "minLength": 1,
+        "type": "string"
+      },
+      "Max70Text": {
+        "maxLength": 70,
+        "minLength": 1,
+        "type": "string"
+      },
+      "NamePrefix1Code": {
+        "enum": [
+          "DOCT",
+          "MIST",
+          "MISS",
+          "MADM"
+        ],
+        "type": "string"
+      },
+      "OrganisationIdentification8": {
+        "additionalProperties": false,
+        "properties": {
+          "AnyBIC": {
+            "$ref": "#/components/schemas/AnyBICIdentifier"
+          },
+          "Othr": {
+            "items": {
+              "$ref": "#/components/schemas/GenericOrganisationIdentification1"
+            },
+            "minItems": 0,
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "OrganisationIdentificationSchemeName1Choice": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": [
+              "Cd"
+            ]
+          },
+          {
+            "required": [
+              "Prtry"
+            ]
+          }
+        ],
+        "properties": {
+          "Cd": {
+            "$ref": "#/components/schemas/ExternalOrganisationIdentification1Code"
+          },
+          "Prtry": {
+            "$ref": "#/components/schemas/Max35Text"
+          }
+        },
+        "type": "object"
+      },
+      "Party34Choice": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": [
+              "OrgId"
+            ]
+          },
+          {
+            "required": [
+              "PrvtId"
+            ]
+          }
+        ],
+        "properties": {
+          "OrgId": {
+            "$ref": "#/components/schemas/OrganisationIdentification8"
+          },
+          "PrvtId": {
+            "$ref": "#/components/schemas/PersonIdentification13"
+          }
+        },
+        "type": "object"
+      },
+      "Party35Choice": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": [
+              "Pty"
+            ]
+          },
+          {
+            "required": [
+              "Agt"
+            ]
+          }
+        ],
+        "properties": {
+          "Agt": {
+            "$ref": "#/components/schemas/BranchAndFinancialInstitutionIdentification5"
+          },
+          "Pty": {
+            "$ref": "#/components/schemas/PartyIdentification125"
+          }
+        },
+        "type": "object"
+      },
+      "PartyIdentification125": {
+        "additionalProperties": false,
+        "properties": {
+          "CtctDtls": {
+            "$ref": "#/components/schemas/ContactDetails2"
+          },
+          "CtryOfRes": {
+            "$ref": "#/components/schemas/CountryCode"
+          },
+          "Id": {
+            "$ref": "#/components/schemas/Party34Choice"
+          },
+          "Nm": {
+            "$ref": "#/components/schemas/Max140Text"
+          },
+          "PstlAdr": {
+            "$ref": "#/components/schemas/PostalAddress6"
+          }
+        },
+        "type": "object"
+      },
+      "PersonIdentification13": {
+        "additionalProperties": false,
+        "properties": {
+          "DtAndPlcOfBirth": {
+            "$ref": "#/components/schemas/DateAndPlaceOfBirth1"
+          },
+          "Othr": {
+            "items": {
+              "$ref": "#/components/schemas/GenericPersonIdentification1"
+            },
+            "minItems": 0,
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "PersonIdentificationSchemeName1Choice": {
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "required": [
+              "Cd"
+            ]
+          },
+          {
+            "required": [
+              "Prtry"
+            ]
+          }
+        ],
+        "properties": {
+          "Cd": {
+            "$ref": "#/components/schemas/ExternalPersonIdentification1Code"
+          },
+          "Prtry": {
+            "$ref": "#/components/schemas/Max35Text"
+          }
+        },
+        "type": "object"
+      },
+      "PhoneNumber": {
+        "pattern": "\\+[0-9]{1,3}-[0-9()+\\-]{1,30}",
+        "type": "string"
+      },
+      "PostalAddress6": {
+        "additionalProperties": false,
+        "properties": {
+          "AdrLine": {
+            "items": {
+              "$ref": "#/components/schemas/Max70Text"
+            },
+            "maxItems": 7,
+            "minItems": 0,
+            "type": "array"
+          },
+          "AdrTp": {
+            "$ref": "#/components/schemas/AddressType2Code"
+          },
+          "BldgNb": {
+            "$ref": "#/components/schemas/Max16Text"
+          },
+          "Ctry": {
+            "$ref": "#/components/schemas/CountryCode"
+          },
+          "CtrySubDvsn": {
+            "$ref": "#/components/schemas/Max35Text"
+          },
+          "Dept": {
+            "$ref": "#/components/schemas/Max70Text"
+          },
+          "PstCd": {
+            "$ref": "#/components/schemas/Max16Text"
+          },
+          "StrtNm": {
+            "$ref": "#/components/schemas/Max70Text"
+          },
+          "SubDept": {
+            "$ref": "#/components/schemas/Max70Text"
+          },
+          "TwnNm": {
+            "$ref": "#/components/schemas/Max35Text"
+          }
+        },
+        "type": "object"
+      },
+      "ProprietaryData6": {
+        "additionalProperties": false,
+        "properties": {
+          "Any": {
+            "$ref": "#/components/schemas/SkipPayload"
+          }
+        },
+        "required": [
+          "Any"
+        ],
+        "type": "object"
+      },
+      "ProprietaryData7": {
+        "additionalProperties": false,
+        "properties": {
+          "Data": {
+            "$ref": "#/components/schemas/ProprietaryData6"
+          },
+          "Tp": {
+            "$ref": "#/components/schemas/Max35Text"
+          }
+        },
+        "required": [
+          "Tp",
+          "Data"
+        ],
+        "type": "object"
+      },
+      "ProprietaryFormatInvestigationV04": {
+        "additionalProperties": false,
+        "properties": {
+          "Assgnmt": {
+            "$ref": "#/components/schemas/CaseAssignment4"
+          },
+          "Case": {
+            "$ref": "#/components/schemas/Case4"
+          },
+          "PrtryData": {
+            "$ref": "#/components/schemas/ProprietaryData7"
+          },
+          "SplmtryData": {
+            "items": {
+              "$ref": "#/components/schemas/SupplementaryData1"
+            },
+            "minItems": 0,
+            "type": "array"
+          }
+        },
+        "required": [
+          "Assgnmt",
+          "PrtryData"
+        ],
+        "type": "object"
+      },
+      "SkipPayload": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "SupplementaryData1": {
+        "additionalProperties": false,
+        "properties": {
+          "Envlp": {
+            "$ref": "#/components/schemas/SupplementaryDataEnvelope1"
+          },
+          "PlcAndNm": {
+            "$ref": "#/components/schemas/Max350Text"
+          }
+        },
+        "required": [
+          "Envlp"
+        ],
+        "type": "object"
+      },
+      "SupplementaryDataEnvelope1": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "YesNoIndicator": {
+        "type": "boolean"
+      }
+    }
+  }
+}
